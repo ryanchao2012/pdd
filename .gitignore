@@ -1,5 +1,6 @@
-
+Makefile
 build/
 .obj/
 bin/
 *.o
+*.sh

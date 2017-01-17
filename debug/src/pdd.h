@@ -9,9 +9,12 @@
 #ifndef pdd_h
 #define pdd_h
 #include <opencv2/opencv.hpp>
+#include "FlyCapture2.h"
 #include <stdio.h>
+#include "FlyCapture2.h"
 
-#define    DEF_AVE_FRM_SPL_NUM       (5)  // default background reference frame number
+#define          PDD_OSX_DEBUG       (1)   // in debug mode, we use different camera
+#define    DEF_AVE_FRM_SPL_NUM       (5)   // default background reference frame number
 #define  DEF_FRM_GRAB_DELAY_MS       (10)  // default frame grab delay time is milliseconds
 
 
@@ -40,6 +43,10 @@
 //    std::map<std::string, std::string> options;
 //};
 
+struct Cam {
+    
+};
+
 class Pdd {
 public:
     Pdd() {initCam();};
@@ -61,8 +68,11 @@ private:
     bool grabRawFrame();
     cv::Mat grabAveFrame();
     bool grayOnly = true;
-    
+#if PDD_OSX_DEBUG
     cv::VideoCapture cam;
+#else
+    FlyCapture2::Camera camera;
+#endif
     cv::Mat rawFrame;
     cv::Mat bgRefFrame;
     cv::Mat fgSplFrame;

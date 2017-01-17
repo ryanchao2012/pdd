@@ -14,7 +14,6 @@
 #include <opencv2/video/background_segm.hpp>
 
 
-
 using namespace cv;
 using namespace std;
 
@@ -33,10 +32,6 @@ unsigned int Pdd::parseOption(const std::string & name, unsigned int def_value) 
     else {  return value;  }
 }
 
-//Pdd::Pdd() {
-//    initCam();
-//}
-
 Pdd::Pdd(const char * config) {
     initCam();
     loadOptions(config);
@@ -44,11 +39,46 @@ Pdd::Pdd(const char * config) {
 
 
 void Pdd::initCam() {
+#if PDD_OSX_DEBUG
     cam = VideoCapture(0);
     camStatus = cam.isOpened();
     if (camStatus) {
         cam.set(CV_CAP_PROP_FPS, 60);
     }
+#else
+    camStatus = false;
+    FlyCapture2::Error error;
+    FlyCapture2::Camera camera;
+    FlyCapture2::CameraInfo camInfo;
+    error = camera.Connect( 0 );
+    if (error != FlyCapture2::PGRERROR_OK)
+    {
+        std::cout << "Failed to connect to camera" << std::endl;
+        return;
+    }
+    
+    // Get the camera info and print it out
+    error = camera.GetCameraInfo( &camInfo );
+    if ( error != PGRERROR_OK )
+    {
+        std::cout << "Failed to get camera info from camera" << std::endl;
+        return;
+    }
+    std::cout << camInfo.vendorName << " " << camInfo.modelName << " " << camInfo.serialNumber << std::endl;
+
+    error = camera.StartCapture();
+    if ( error == PGRERROR_ISOCH_BANDWIDTH_EXCEEDED )
+    {
+        std::cout << "Bandwidth exceeded" << std::endl;
+        return;
+    }
+    else if ( error != PGRERROR_OK )
+    {
+        std::cout << "Failed to start image capture" << std::endl;
+        return;
+    }
+    camStatus = true;
+#endif
 }
 
 void Pdd::loadOptions(const char * config) {
@@ -104,13 +134,33 @@ void Pdd::applyDiff() {
     }
 }
 bool Pdd::grabRawFrame() {
+#if PDD_OSX_DEBUG
     if(!camStatus) return false;
     if (!cam.read(rawFrame)) return false;
-    
-    if(grayOnly) {  cvtColor(rawFrame, rawFrame, CV_BGR2GRAY);  }
 //    Mat temp;
 //    cvtColor(rawFrame, temp, CV_BGR2GRAY);
 //    cropFrame = temp(Rect(obsBox.x + 1, obsBox.y + 1, obsBox.w, obsBox.h));
+    
+#else
+    // Get the image
+    FlyCapture2::Image rawImage;
+    FlyCapture2::Error error = camera.RetrieveBuffer( &rawImage );
+    if ( error != FlyCapture2::PGRERROR_OK )
+    {
+        std::cout << "capture error" << std::endl;
+        return false;
+    }
+    
+    // convert to rgb
+    FlyCapture2::Image rgbImage;
+    rawImage.Convert( FlyCapture2::PIXEL_FORMAT_BGR, &rgbImage );
+    
+    // convert to OpenCV Mat
+    unsigned int rowBytes = (double)rgbImage.GetReceivedDataSize()/(double)rgbImage.GetRows();
+    rawFrame = cv::Mat(rgbImage.GetRows(), rgbImage.GetCols(), CV_8UC3, rgbImage.GetData(),rowBytes);
+#endif
+    
+    if(grayOnly) {  cvtColor(rawFrame, rawFrame, CV_BGR2GRAY);  }
     return true;
 }
 
