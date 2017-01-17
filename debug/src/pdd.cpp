@@ -59,7 +59,7 @@ void Pdd::initCam() {
     
     // Get the camera info and print it out
     error = camera.GetCameraInfo( &camInfo );
-    if ( error != PGRERROR_OK )
+    if ( error != FlyCapture2::PGRERROR_OK )
     {
         std::cout << "Failed to get camera info from camera" << std::endl;
         return;
@@ -72,7 +72,7 @@ void Pdd::initCam() {
         std::cout << "Bandwidth exceeded" << std::endl;
         return;
     }
-    else if ( error != PGRERROR_OK )
+    else if ( error != FlyCapture2::PGRERROR_OK )
     {
         std::cout << "Failed to start image capture" << std::endl;
         return;
