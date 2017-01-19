@@ -6,15 +6,11 @@
 //  Copyright © 2017年 Tripper. All rights reserved.
 //
 
-#include <map>
-#include <sstream>
-#include <stdexcept>
-#include <string>
-#include <iostream>
 #include "pdd.h"
-#include <unistd.h>
+#include <iostream>
 
 using namespace cv;
+//using namespace std;
 const char config[] = "numBgRefFrm=5\n"
                       "msFrmGrabDelay=10\n"
                       "greyOnly=1";
@@ -23,16 +19,19 @@ std::map<std::string, std::string> options; // global?
 Pdd pipeline;
 void keyAction(char key);
 int main(int argc, const char * argv[]) {
+    pipeline.loadOptions(config);
     char key = 0;
     
-    cv::namedWindow("preview");
+//    cv::namedWindow("preview");
     
     while (key != 'q') {
-        key = waitKey(50);
+//        key = cv::waitKey(10);
+        std::cin >> key;
         keyAction(key);
     }
     
     return 0;
+    
 }
 
 

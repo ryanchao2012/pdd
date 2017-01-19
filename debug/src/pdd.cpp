@@ -104,7 +104,8 @@ void Pdd::resetOptions() {
 
 void Pdd::update() {
     if(grabRawFrame()) {
-        imshow("preview", rawFrame);
+//        imshow("preview", rawFrame);
+        imwrite("preview.png", rawFrame);
     } else {
         std::cout << "!\n";
     }

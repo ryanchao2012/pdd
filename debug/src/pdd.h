@@ -13,7 +13,7 @@
 #include <stdio.h>
 
 
-#define          PDD_OSX_DEBUG       (0)   // in debug mode, we use different camera
+#define          PDD_OSX_DEBUG       (1)   // in debug mode, we use different camera
 #define    DEF_AVE_FRM_SPL_NUM       (10)   // default background reference frame number
 #define  DEF_FRM_GRAB_DELAY_MS       (30)  // default frame grab delay time is milliseconds
 
@@ -54,10 +54,10 @@ public:
     void resetOptions();
     void loadOptions(const char * config);
     void showFrameInfo();
-    void showBg(){ if(!bgRefFrame.empty()) cv::imshow("preview", bgRefFrame); };
-    void showRaw(){ if(!rawFrame.empty()) cv::imshow("preview", rawFrame); };
-    void showFg(){ if(!fgSplFrame.empty()) cv::imshow("preview", fgSplFrame); };
-    void showDiff() { if(!targetFrame.empty()) cv::imshow("preview", targetFrame); };
+    void showBg(){ if(!bgRefFrame.empty()) cv::imwrite("preview.png", bgRefFrame); /*cv::imshow("preview", bgRefFrame);*/ };
+    void showRaw(){ if(!rawFrame.empty()) cv::imwrite("preview.png", rawFrame); /*cv::imshow("preview", rawFrame);*/ };
+    void showFg(){ if(!fgSplFrame.empty()) cv::imwrite("preview.png", fgSplFrame); /*cv::imshow("preview", fgSplFrame);*/ };
+    void showDiff() { if(!targetFrame.empty()) cv::imwrite("preview.png", targetFrame); /*cv::imshow("preview", targetFrame);*/ };
     bool grabRawFrame();
 //protected:
 //    Pdd(const char *config);
