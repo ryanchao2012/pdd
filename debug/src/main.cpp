@@ -46,7 +46,10 @@ void keyAction(char key) {
             cv::imshow("preview", Mat::zeros(1, 1, CV_8UC3));
             break;
         case 'd':
-            pipeline.applyDiff();
+            pipeline.applyMOG2();
+            break;
+        case 'l':
+            pipeline.applyFilter();
             break;
         case 'f':
             pipeline.setupFgSpl();
@@ -67,7 +70,16 @@ void keyAction(char key) {
             pipeline.showFg();
             break;
         case '4':
-            pipeline.showDiff();
+            pipeline.showMOG2();
+            break;
+        case '5':
+            pipeline.showCLAHE();
+            break;
+        case '6':
+            pipeline.showCanny();
+            break;
+        case '7':
+            pipeline.showContour();
             break;
         default:
             break;

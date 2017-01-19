@@ -20,6 +20,17 @@
 #define            DEF_MOG2_TH       (16)  // MOG2 parameter: threshold
 #define    DEF_MOG2_BG_SPL_STD       (5)   // background sampling std used by MOG2
 
+#define              DEF_BOX_X       (20)
+#define              DEF_BOX_Y       (20)
+#define              DEF_BOX_W       (100)
+#define              DEF_BOX_H       (150)
+
+#define         DEF_CLAHE_POW2       (5)
+
+#define     DEF_CANNY_KNL_SIZE       (3)   //
+#define       DEF_CANNY_LOW_TH       (50)  //
+#define     DEF_CANNY_TH_RATIO       (3)   //
+
 
 //+--------+----+----+----+----+------+------+------+------+
 //|        | C1 | C2 | C3 | C4 | C(5) | C(6) | C(7) | C(8) |
@@ -49,45 +60,56 @@
 class Pdd {
 public:
     Pdd() {initCam();};
-//    Pdd(const char *config);
     void setupBgRef() { bgRefFrame = grabAveFrame(); bgStatus = true; std::cout << "BG recorded\n"; };
     void setupFgSpl() { fgSplFrame = grabAveFrame(); fgStatus = true; std::cout << "FG recorded\n"; };
-    void applyDiff();
+    void applyMOG2();
+    void applyFilter();
     void update();
     void resetOptions();
     void reloadConfig(const char * cfgFile);
     void showFrameInfo();
-    void showBg(){ if(!bgRefFrame.empty()) cv::imwrite("preview.png", bgRefFrame); /*cv::imshow("preview", bgRefFrame);*/ };
-    void showRaw(){ if(!rawFrame.empty()) cv::imwrite("preview.png", rawFrame); /*cv::imshow("preview", rawFrame);*/ };
-    void showFg(){ if(!fgSplFrame.empty()) cv::imwrite("preview.png", fgSplFrame); /*cv::imshow("preview", fgSplFrame);*/ };
-    void showDiff() { if(!targetFrame.empty()) cv::imwrite("preview.png", targetFrame); /*cv::imshow("preview", targetFrame);*/ };
-    bool grabRawFrame();
-//protected:
-//    Pdd(const char *config);
+    void showBg(){ showFrame(bgRefFrame); };
+    void showRaw(){ showFrame(rawFrame); };
+    void showFg(){ showFrame(fgSplFrame); };
+    void showMOG2() { showFrame(mog2Frame); };
+    void showCLAHE() { showFrame(claheFrame); };
+    void showCanny() { showFrame(cannyFrame); };
+    void showContour() {showFrame(contourFrame); };
+
 private:
     unsigned int parseOption(const std::string & name, unsigned int def_value);
     void initCam();
-    //bool grabRawFrame();
+    bool grabRawFrame();
     cv::Mat grabAveFrame();
-    bool grayOnly = true;
+    void showFrame(cv::Mat frame){ if(!frame.empty()) cv::imwrite("preview.png", frame); };
+    void applyCLAHE();
+    void applyCanny();
+
 #if PDD_OSX_DEBUG
     cv::VideoCapture cam;
 #else
     FlyCapture2::Camera cam;
 #endif
+
     cv::Mat rawFrame;
     cv::Mat bgRefFrame;
     cv::Mat fgSplFrame;
-    cv::Mat targetFrame;
+    cv::Mat mog2Frame;
+    cv::Mat claheFrame;
+    cv::Mat cannyFrame;
+    cv::Mat contourFrame;
     std::map<std::string, std::string> options;
     
     int frameType = CV_8UC3;
     int frameChannel = 3;
     cv::Size frameSize;
-    
+    bool grayOnly = true;
     bool camStatus = false;
     bool bgStatus = false;
     bool fgStatus = false;
+    bool mog2Status = false;
+    bool claheStatus = false;
+    bool cannyStatus = false;
     
     
 };

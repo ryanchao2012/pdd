@@ -33,12 +33,6 @@ unsigned int Pdd::parseOption(const std::string & name, unsigned int def_value) 
     if (value == 0) {  return def_value;  }
     else {  return value;  }
 }
-/*
-Pdd::Pdd(const char * config) {
-    initCam();
-    loadOptions(config);
-}
-*/
 
 void Pdd::initCam() {
 #if PDD_OSX_DEBUG
@@ -111,6 +105,10 @@ void Pdd::resetOptions() {
     options["historyMOG2"] = std::to_string(DEF_MOG2_HST);
     options["thMOG2"] = std::to_string(DEF_MOG2_TH);
     options["stdMOG2"] = std::to_string(DEF_MOG2_BG_SPL_STD);
+    options["sizeKerenlCanny"] = std::to_string(DEF_CANNY_KNL_SIZE);
+    options["lowThresholdCanny"] = std::to_string(DEF_CANNY_LOW_TH);
+    options["ratioThresholdCanny"] = std::to_string(DEF_CANNY_TH_RATIO);
+    options["pow2CLAHE"] = std::to_string(DEF_CLAHE_POW2);
 }
 
 void Pdd::update() {
@@ -122,16 +120,57 @@ void Pdd::update() {
     }
 }
 
+void Pdd::applyFilter() {
+    applyCLAHE();
+    applyCanny();
+}
 
-void Pdd::applyDiff() {
+void Pdd::applyCLAHE() {
+    if (mog2Status) {
+        std::cout << "Applying CLAHE to enhance contrast, please wait \n";
+        claheFrame = cv::Mat::zeros(frameSize, frameType);
+        int claheGridSize = (1 << parseOption("pow2CLAHE", DEF_CLAHE_POW2));
+        Ptr<cv::CLAHE> clahe = cv::createCLAHE(1.0, Size(claheGridSize, claheGridSize));
+        clahe->apply(mog2Frame, claheFrame);
+        
+        std::cout << "CLAHE finished!\n";
+        claheStatus = true;
+        
+    } else { claheStatus = false; }
+}
+
+void Pdd::applyCanny() {
+    if (claheStatus) {
+        std::cout << "Applying Canny to find contour, please wait \n";
+        cannyFrame = cv::Mat::zeros(frameSize, frameType);
+        double lowThresholdCanny = (double)parseOption("lowThresholdCanny", DEF_CANNY_LOW_TH);
+        double ratioThresholdCanny = (double)parseOption("ratioThresholdCanny", DEF_CANNY_TH_RATIO);
+        int sizeKerenlCanny = parseOption("sizeKerenlCanny", DEF_CANNY_KNL_SIZE);
+        Canny(claheFrame, cannyFrame, lowThresholdCanny, ratioThresholdCanny * lowThresholdCanny, sizeKerenlCanny);
+        
+        vector<vector<Point> > contours;
+        vector<Vec4i> hierarchy;
+        findContours(cannyFrame, contours, hierarchy, CV_RETR_TREE, CV_CHAIN_APPROX_SIMPLE, Point(0, 0));
+        
+        contourFrame = cv::Mat::zeros(frameSize, frameType);
+        for(unsigned int i = 0; i < contours.size(); i++) {
+            if(hierarchy[i][2] >= 0) {
+                drawContours(contourFrame, contours, i, cv::Scalar(0, 255, 0), 2, 8, hierarchy, 0, Point());
+            }
+        }
+        std::cout << "Canny finished!\n";
+    }
+}
+
+void Pdd::applyMOG2() {
     if(bgStatus && fgStatus) {
-        std::cout << "Start separating fg/bg, please wait \n";
+        std::cout << "Applying MOG2 fg/bg separation, please wait \n";
         unsigned int historyMOG2 = parseOption("historyMOG2", DEF_MOG2_HST);
         double thMOG2 = (double)parseOption("thMOG2", DEF_MOG2_TH);
         double stdMOG2 = (double)parseOption("stdMOG2", DEF_MOG2_BG_SPL_STD);
         
         
-        targetFrame = cv::Mat::zeros(frameSize, frameType);
+        mog2Frame = cv::Mat::zeros(frameSize, frameType);
         Ptr<BackgroundSubtractor> pMOG2 = cv::createBackgroundSubtractorMOG2(historyMOG2, thMOG2, 0);
         cv::Mat fgMask(frameSize, frameType),
                 temp(frameSize, frameType),
@@ -145,9 +184,10 @@ void Pdd::applyDiff() {
             pMOG2->apply(temp, fgMask);
         }
         pMOG2->apply(fgSplFrame, fgMask, 0);
-        fgSplFrame.copyTo(targetFrame, fgMask);
-        std::cout << "Finished! \n";
-    }
+        fgSplFrame.copyTo(mog2Frame, fgMask);
+        std::cout << "MOG2 finished! \n";
+        mog2Status = true;
+    } else { mog2Status = false; }
 }
 bool Pdd::grabRawFrame() {
 #if PDD_OSX_DEBUG
@@ -187,7 +227,7 @@ void Pdd::showFrameInfo() {
     std::cout << "Background Frame: " << bgRefFrame.cols << " x " << bgRefFrame.rows << ", type: " << bgRefFrame.type() << ", empty: " << bgRefFrame.empty() << std::endl;
     std::cout << "Foreground Frame: " << fgSplFrame.cols << " x " << fgSplFrame.rows << ", type: " << fgSplFrame.type() << ", empty: " << fgSplFrame.empty() << std::endl;
     
-    std::cout << "Target Frame: " << targetFrame.cols << " x " << targetFrame.rows << ", type: " << targetFrame.type() << ", empty: " << targetFrame.empty() << std::endl;
+    std::cout << "MOG2 Frame: " << mog2Frame.cols << " x " << mog2Frame.rows << ", type: " << mog2Frame.type() << ", empty: " << mog2Frame.empty() << std::endl;
 
 }
 
