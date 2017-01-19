@@ -14,8 +14,11 @@
 
 
 #define          PDD_OSX_DEBUG       (1)   // in debug mode, we use different camera
-#define    DEF_AVE_FRM_SPL_NUM       (10)   // default background reference frame number
+#define    DEF_AVE_FRM_SPL_NUM       (10)  // default background reference frame number
 #define  DEF_FRM_GRAB_DELAY_MS       (30)  // default frame grab delay time is milliseconds
+#define           DEF_MOG2_HST       (10)  // MOG2 parameter: history
+#define            DEF_MOG2_TH       (16)  // MOG2 parameter: threshold
+#define    DEF_MOG2_BG_SPL_STD       (5)   // background sampling std used by MOG2
 
 
 //+--------+----+----+----+----+------+------+------+------+
@@ -47,12 +50,12 @@ class Pdd {
 public:
     Pdd() {initCam();};
 //    Pdd(const char *config);
-    void setupBgRef() { bgRefFrame = grabAveFrame(); bgStatus = true; };
-    void setupFgSpl() { fgSplFrame = grabAveFrame(); fgStatus = true; };
+    void setupBgRef() { bgRefFrame = grabAveFrame(); bgStatus = true; std::cout << "BG recorded\n"; };
+    void setupFgSpl() { fgSplFrame = grabAveFrame(); fgStatus = true; std::cout << "FG recorded\n"; };
     void applyDiff();
     void update();
     void resetOptions();
-    void loadOptions(const char * config);
+    void reloadConfig(const char * cfgFile);
     void showFrameInfo();
     void showBg(){ if(!bgRefFrame.empty()) cv::imwrite("preview.png", bgRefFrame); /*cv::imshow("preview", bgRefFrame);*/ };
     void showRaw(){ if(!rawFrame.empty()) cv::imwrite("preview.png", rawFrame); /*cv::imshow("preview", rawFrame);*/ };

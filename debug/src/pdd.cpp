@@ -11,6 +11,8 @@
 #include <thread>
 #include <chrono>
 #include <unistd.h>
+#include <iostream>
+#include <fstream>
 #include <opencv2/video/background_segm.hpp>
 #include "FlyCapture2.h"
 
@@ -80,19 +82,25 @@ void Pdd::initCam() {
 #endif
 }
 
-void Pdd::loadOptions(const char * config) {
-    std::istringstream is_file(config);
-    std::string line;
-    while( std::getline(is_file, line) )
-    {
-        std::istringstream is_line(line);
-        std::string key;
-        if( std::getline(is_line, key, '=') )
+void Pdd::reloadConfig(const char * cfgFile) {
+    fstream fin;
+    char line[1024];
+    try {
+        fin.open(cfgFile,ios::in);
+        while( fin.getline(line, sizeof(line)) )
         {
-            std::string value;
-            if( std::getline(is_line, value) ) { options[key] = value; }
+            std::istringstream is_line(line);
+            std::string key;
+            if( std::getline(is_line, key, '=') )
+            {
+                std::string value;
+                if( std::getline(is_line, value) ) { options[key] = value; }
+                std::cout << key << " = " << value << std::endl;
+            }
         }
     }
+    catch(const char* message) {  std::cout << message << std::endl; }
+
 }
 
 
@@ -100,6 +108,9 @@ void Pdd::resetOptions() {
     options.clear();
     options["numAveFrmSpl"] = std::to_string(DEF_AVE_FRM_SPL_NUM);
     options["msFrmGrabDelay"] = std::to_string(DEF_FRM_GRAB_DELAY_MS);
+    options["historyMOG2"] = std::to_string(DEF_MOG2_HST);
+    options["thMOG2"] = std::to_string(DEF_MOG2_TH);
+    options["stdMOG2"] = std::to_string(DEF_MOG2_BG_SPL_STD);
 }
 
 void Pdd::update() {
@@ -114,23 +125,28 @@ void Pdd::update() {
 
 void Pdd::applyDiff() {
     if(bgStatus && fgStatus) {
+        std::cout << "Start separating fg/bg, please wait \n";
+        unsigned int historyMOG2 = parseOption("historyMOG2", DEF_MOG2_HST);
+        double thMOG2 = (double)parseOption("thMOG2", DEF_MOG2_TH);
+        double stdMOG2 = (double)parseOption("stdMOG2", DEF_MOG2_BG_SPL_STD);
+        
+        
         targetFrame = cv::Mat::zeros(frameSize, frameType);
-        Ptr<BackgroundSubtractor> pMOG2 = cv::createBackgroundSubtractorMOG2(50, 32, 0);
+        Ptr<BackgroundSubtractor> pMOG2 = cv::createBackgroundSubtractorMOG2(historyMOG2, thMOG2, 0);
         cv::Mat fgMask(frameSize, frameType),
                 temp(frameSize, frameType),
                 noise = cv::Mat::zeros(frameSize, CV_32FC(frameChannel)),
                 bg;
-        for(int i = 0; i < 100; i++) {
+        for(int i = 0; i < historyMOG2; i++) {
             bgRefFrame.convertTo(bg, CV_32FC(frameChannel));
-            cv::randn(noise, 0.0, 5.0);
+            cv::randn(noise, 0.0, stdMOG2);
             bg += noise;
             bg.convertTo(temp, frameType);
             pMOG2->apply(temp, fgMask);
         }
-        
         pMOG2->apply(fgSplFrame, fgMask, 0);
         fgSplFrame.copyTo(targetFrame, fgMask);
-        
+        std::cout << "Finished! \n";
     }
 }
 bool Pdd::grabRawFrame() {

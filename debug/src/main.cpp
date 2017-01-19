@@ -9,23 +9,24 @@
 #include "pdd.h"
 #include <iostream>
 
+#define CFG_FILE     "../../pdd.cfg"
 using namespace cv;
 //using namespace std;
-const char config[] = "numBgRefFrm=5\n"
-                      "msFrmGrabDelay=10\n"
-                      "greyOnly=1";
+//const char config[] = "numBgRefFrm=5\n"
+//                      "msFrmGrabDelay=10\n"
+//                      "greyOnly=1";
 
 std::map<std::string, std::string> options; // global?
 Pdd pipeline;
 void keyAction(char key);
 int main(int argc, const char * argv[]) {
-    pipeline.loadOptions(config);
+    pipeline.reloadConfig(CFG_FILE);
     char key = 0;
     
 //    cv::namedWindow("preview");
     
     while (key != 'q') {
-//        key = cv::waitKey(10);
+        // key = cv::waitKey(10);
         std::cin >> key;
         keyAction(key);
     }
@@ -50,8 +51,8 @@ void keyAction(char key) {
         case 'f':
             pipeline.setupFgSpl();
             break;
-        case 'g':
-            //pipeline.grabRawFrame();
+        case 'r':
+            pipeline.reloadConfig(CFG_FILE);
             break;
         case 'i':
             pipeline.showFrameInfo();
