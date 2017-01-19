@@ -25,6 +25,8 @@
 #define              DEF_BOX_W       (100)
 #define              DEF_BOX_H       (150)
 
+#define        DEF_DILATE_SIZE       (3)
+
 #define         DEF_CLAHE_POW2       (5)
 
 #define     DEF_CANNY_KNL_SIZE       (3)   //
@@ -72,6 +74,7 @@ public:
     void showRaw(){ showFrame(rawFrame); };
     void showFg(){ showFrame(fgSplFrame); };
     void showMOG2() { showFrame(mog2Frame); };
+    void showDilate() { showFrame(dilateFrame); }
     void showCLAHE() { showFrame(claheFrame); };
     void showCanny() { showFrame(cannyFrame); };
     void showContour() {showFrame(contourFrame); };
@@ -84,6 +87,7 @@ private:
     void showFrame(cv::Mat frame){ if(!frame.empty()) cv::imwrite("preview.png", frame); };
     void applyCLAHE();
     void applyCanny();
+    void applyDilate();
 
 #if PDD_OSX_DEBUG
     cv::VideoCapture cam;
@@ -95,6 +99,7 @@ private:
     cv::Mat bgRefFrame;
     cv::Mat fgSplFrame;
     cv::Mat mog2Frame;
+    cv::Mat dilateFrame;
     cv::Mat claheFrame;
     cv::Mat cannyFrame;
     cv::Mat contourFrame;
@@ -110,6 +115,7 @@ private:
     bool mog2Status = false;
     bool claheStatus = false;
     bool cannyStatus = false;
+    bool dilateStatus = false;
     
     
 };

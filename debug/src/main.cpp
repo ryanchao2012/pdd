@@ -73,12 +73,15 @@ void keyAction(char key) {
             pipeline.showMOG2();
             break;
         case '5':
-            pipeline.showCLAHE();
+            pipeline.showDilate();
             break;
         case '6':
-            pipeline.showCanny();
+            pipeline.showCLAHE();
             break;
         case '7':
+            pipeline.showCanny();
+            break;
+        case '8':
             pipeline.showContour();
             break;
         default:

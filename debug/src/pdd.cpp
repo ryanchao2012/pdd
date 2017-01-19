@@ -109,6 +109,7 @@ void Pdd::resetOptions() {
     options["lowThresholdCanny"] = std::to_string(DEF_CANNY_LOW_TH);
     options["ratioThresholdCanny"] = std::to_string(DEF_CANNY_TH_RATIO);
     options["pow2CLAHE"] = std::to_string(DEF_CLAHE_POW2);
+    options["sizeDilate"] = std::to_string(DEF_DILATE_SIZE);
 }
 
 void Pdd::update() {
@@ -121,12 +122,24 @@ void Pdd::update() {
 }
 
 void Pdd::applyFilter() {
+    applyDilate();
     applyCLAHE();
     applyCanny();
 }
 
+void Pdd::applyDilate() {
+    if(mog2Status) {
+        std::cout << "Applying dilate to fill holes, please wait \n";
+        int sizeDilate = parseOption("sizeDilate", DEF_DILATE_SIZE);
+        dilateFrame = cv::Mat::zeros(frameSize, frameType);
+        cv::dilate(mog2Frame, dilateFrame, cv::Mat(sizeDilate, sizeDilate, frameType));
+        
+        std::cout << "Dilate finished!\n";
+    }
+}
+
 void Pdd::applyCLAHE() {
-    if (mog2Status) {
+    if (dilateStatus) {
         std::cout << "Applying CLAHE to enhance contrast, please wait \n";
         claheFrame = cv::Mat::zeros(frameSize, frameType);
         int claheGridSize = (1 << parseOption("pow2CLAHE", DEF_CLAHE_POW2));
@@ -140,7 +153,7 @@ void Pdd::applyCLAHE() {
 }
 
 void Pdd::applyCanny() {
-    if (claheStatus) {
+    if (dilateStatus) {
         std::cout << "Applying Canny to find contour, please wait \n";
         cannyFrame = cv::Mat::zeros(frameSize, frameType);
         double lowThresholdCanny = (double)parseOption("lowThresholdCanny", DEF_CANNY_LOW_TH);
