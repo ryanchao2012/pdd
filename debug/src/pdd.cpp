@@ -152,10 +152,12 @@ void Pdd::applyCanny() {
         vector<Vec4i> hierarchy;
         findContours(cannyFrame, contours, hierarchy, CV_RETR_TREE, CV_CHAIN_APPROX_SIMPLE, Point(0, 0));
         
-        contourFrame = cv::Mat::zeros(frameSize, frameType);
+        contourFrame = cv::Mat::zeros(frameSize, CV_8UC3);
+        Scalar edgeColor = cv::Scalar(0, 255, 0);
         for(unsigned int i = 0; i < contours.size(); i++) {
             if(hierarchy[i][2] >= 0) {
-                drawContours(contourFrame, contours, i, cv::Scalar(0, 255, 0), 2, 8, hierarchy, 0, Point());
+                drawContours(contourFrame, contours, i, edgeColor, 2, 8, hierarchy, 0, Point());
+                std::cout << ".";
             }
         }
         std::cout << "Canny finished!\n";
@@ -165,7 +167,7 @@ void Pdd::applyCanny() {
 void Pdd::applyMOG2() {
     if(bgStatus && fgStatus) {
         std::cout << "Applying MOG2 fg/bg separation, please wait \n";
-        unsigned int historyMOG2 = parseOption("historyMOG2", DEF_MOG2_HST);
+        int historyMOG2 = parseOption("historyMOG2", DEF_MOG2_HST);
         double thMOG2 = (double)parseOption("thMOG2", DEF_MOG2_TH);
         double stdMOG2 = (double)parseOption("stdMOG2", DEF_MOG2_BG_SPL_STD);
         
