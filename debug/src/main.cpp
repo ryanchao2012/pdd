@@ -20,7 +20,7 @@ const char config[] = "numBgRefFrm=5\n"
                       "greyOnly=1";
 
 std::map<std::string, std::string> options; // global?
-Pdd pipeline = Pdd(config);
+Pdd pipeline;
 void keyAction(char key);
 int main(int argc, const char * argv[]) {
     char key = 0;
@@ -50,6 +50,9 @@ void keyAction(char key) {
             break;
         case 'f':
             pipeline.setupFgSpl();
+            break;
+        case 'g':
+            //pipeline.grabRawFrame();
             break;
         case 'i':
             pipeline.showFrameInfo();

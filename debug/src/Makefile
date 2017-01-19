@@ -16,13 +16,13 @@ endif
 BASE_NAME = pdd
 NAME      = ${BASE_NAME}${D}
 OUTDIR    = ${PROJECT_ROOT}/bin
-CXXFLAGS += -c -Wall $(shell pkg-config --cflags opencv)
+CXXFLAGS += -c -Wall $(shell pkg-config --cflags opencv) -std=c++11
 
 INC       = -I${PROJECT_ROOT}/include
 LIBS      = -L${PROJECT_ROOT}/lib $(shell pkg-config --libs opencv)
 
-# INC      += -I/usr/include/flycapture
-# LIBS     += -L../../lib -lflycapture${D} ${FC2_DEPS}
+INC      += -I/usr/include/flycapture
+LIBS     += -L../../lib -lflycapture${D} ${FC2_DEPS}
 
 
 SRC       = main.cpp ${BASE_NAME}.cpp

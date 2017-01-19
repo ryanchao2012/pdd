@@ -11,11 +11,11 @@
 #include <opencv2/opencv.hpp>
 #include "FlyCapture2.h"
 #include <stdio.h>
-#include "FlyCapture2.h"
 
-#define          PDD_OSX_DEBUG       (1)   // in debug mode, we use different camera
-#define    DEF_AVE_FRM_SPL_NUM       (5)   // default background reference frame number
-#define  DEF_FRM_GRAB_DELAY_MS       (10)  // default frame grab delay time is milliseconds
+
+#define          PDD_OSX_DEBUG       (0)   // in debug mode, we use different camera
+#define    DEF_AVE_FRM_SPL_NUM       (10)   // default background reference frame number
+#define  DEF_FRM_GRAB_DELAY_MS       (30)  // default frame grab delay time is milliseconds
 
 
 //+--------+----+----+----+----+------+------+------+------+
@@ -43,14 +43,10 @@
 //    std::map<std::string, std::string> options;
 //};
 
-struct Cam {
-    
-};
-
 class Pdd {
 public:
     Pdd() {initCam();};
-    Pdd(const char *config);
+//    Pdd(const char *config);
     void setupBgRef() { bgRefFrame = grabAveFrame(); bgStatus = true; };
     void setupFgSpl() { fgSplFrame = grabAveFrame(); fgStatus = true; };
     void applyDiff();
@@ -62,16 +58,19 @@ public:
     void showRaw(){ if(!rawFrame.empty()) cv::imshow("preview", rawFrame); };
     void showFg(){ if(!fgSplFrame.empty()) cv::imshow("preview", fgSplFrame); };
     void showDiff() { if(!targetFrame.empty()) cv::imshow("preview", targetFrame); };
+    bool grabRawFrame();
+//protected:
+//    Pdd(const char *config);
 private:
     unsigned int parseOption(const std::string & name, unsigned int def_value);
     void initCam();
-    bool grabRawFrame();
+    //bool grabRawFrame();
     cv::Mat grabAveFrame();
     bool grayOnly = true;
 #if PDD_OSX_DEBUG
     cv::VideoCapture cam;
 #else
-    FlyCapture2::Camera camera;
+    FlyCapture2::Camera cam;
 #endif
     cv::Mat rawFrame;
     cv::Mat bgRefFrame;

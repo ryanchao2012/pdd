@@ -12,7 +12,7 @@
 #include <chrono>
 #include <unistd.h>
 #include <opencv2/video/background_segm.hpp>
-
+#include "FlyCapture2.h"
 
 using namespace cv;
 using namespace std;
@@ -31,12 +31,12 @@ unsigned int Pdd::parseOption(const std::string & name, unsigned int def_value) 
     if (value == 0) {  return def_value;  }
     else {  return value;  }
 }
-
+/*
 Pdd::Pdd(const char * config) {
     initCam();
     loadOptions(config);
 }
-
+*/
 
 void Pdd::initCam() {
 #if PDD_OSX_DEBUG
@@ -48,9 +48,8 @@ void Pdd::initCam() {
 #else
     camStatus = false;
     FlyCapture2::Error error;
-    FlyCapture2::Camera camera;
     FlyCapture2::CameraInfo camInfo;
-    error = camera.Connect( 0 );
+    error = cam.Connect( 0 );
     if (error != FlyCapture2::PGRERROR_OK)
     {
         std::cout << "Failed to connect to camera" << std::endl;
@@ -58,7 +57,7 @@ void Pdd::initCam() {
     }
     
     // Get the camera info and print it out
-    error = camera.GetCameraInfo( &camInfo );
+    error = cam.GetCameraInfo( &camInfo );
     if ( error != FlyCapture2::PGRERROR_OK )
     {
         std::cout << "Failed to get camera info from camera" << std::endl;
@@ -66,8 +65,8 @@ void Pdd::initCam() {
     }
     std::cout << camInfo.vendorName << " " << camInfo.modelName << " " << camInfo.serialNumber << std::endl;
 
-    error = camera.StartCapture();
-    if ( error == PGRERROR_ISOCH_BANDWIDTH_EXCEEDED )
+    error = cam.StartCapture();
+    if ( error == FlyCapture2::PGRERROR_ISOCH_BANDWIDTH_EXCEEDED )
     {
         std::cout << "Bandwidth exceeded" << std::endl;
         return;
@@ -115,7 +114,7 @@ void Pdd::update() {
 void Pdd::applyDiff() {
     if(bgStatus && fgStatus) {
         targetFrame = cv::Mat::zeros(frameSize, frameType);
-        Ptr<BackgroundSubtractor> pMOG2 = cv::createBackgroundSubtractorMOG2(100, 16, 0);
+        Ptr<BackgroundSubtractor> pMOG2 = cv::createBackgroundSubtractorMOG2(50, 32, 0);
         cv::Mat fgMask(frameSize, frameType),
                 temp(frameSize, frameType),
                 noise = cv::Mat::zeros(frameSize, CV_32FC(frameChannel)),
@@ -144,7 +143,7 @@ bool Pdd::grabRawFrame() {
 #else
     // Get the image
     FlyCapture2::Image rawImage;
-    FlyCapture2::Error error = camera.RetrieveBuffer( &rawImage );
+    FlyCapture2::Error error = cam.RetrieveBuffer( &rawImage );
     if ( error != FlyCapture2::PGRERROR_OK )
     {
         std::cout << "capture error" << std::endl;
