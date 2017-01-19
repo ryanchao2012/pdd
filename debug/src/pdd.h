@@ -25,6 +25,8 @@
 #define              DEF_BOX_W       (100)
 #define              DEF_BOX_H       (150)
 
+
+#define          DEF_THRESHOLD       (40)
 #define        DEF_DILATE_SIZE       (3)
 
 #define         DEF_CLAHE_POW2       (5)

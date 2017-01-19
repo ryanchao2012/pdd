@@ -110,6 +110,7 @@ void Pdd::resetOptions() {
     options["ratioThresholdCanny"] = std::to_string(DEF_CANNY_TH_RATIO);
     options["pow2CLAHE"] = std::to_string(DEF_CLAHE_POW2);
     options["sizeDilate"] = std::to_string(DEF_DILATE_SIZE);
+    options["threshold"] = std::to_string(DEF_THRESHOLD);
 }
 
 void Pdd::update() {
@@ -135,6 +136,7 @@ void Pdd::applyDilate() {
         cv::dilate(mog2Frame, dilateFrame, cv::Mat(sizeDilate, sizeDilate, frameType));
         
         std::cout << "Dilate finished!\n";
+        dilateStatus = true;
     }
 }
 
@@ -144,7 +146,7 @@ void Pdd::applyCLAHE() {
         claheFrame = cv::Mat::zeros(frameSize, frameType);
         int claheGridSize = (1 << parseOption("pow2CLAHE", DEF_CLAHE_POW2));
         Ptr<cv::CLAHE> clahe = cv::createCLAHE(1.0, Size(claheGridSize, claheGridSize));
-        clahe->apply(mog2Frame, claheFrame);
+        clahe->apply(dilateFrame, claheFrame);
         
         std::cout << "CLAHE finished!\n";
         claheStatus = true;
@@ -169,10 +171,12 @@ void Pdd::applyCanny() {
         Scalar edgeColor = cv::Scalar(0, 255, 0);
         for(unsigned int i = 0; i < contours.size(); i++) {
             if(hierarchy[i][2] >= 0) {
-                drawContours(contourFrame, contours, i, edgeColor, 2, 8, hierarchy, 0, Point());
+                drawContours(contourFrame, contours, i, edgeColor, 1, 8, hierarchy, 0, Point());
                 std::cout << ".";
             }
         }
+        double threshold = (double)parseOption("threshold", DEF_THRESHOLD);
+        cv::threshold( contourFrame, contourFrame, threshold, 255, 0);
         std::cout << "Canny finished!\n";
     }
 }
@@ -200,6 +204,10 @@ void Pdd::applyMOG2() {
         }
         pMOG2->apply(fgSplFrame, fgMask, 0);
         fgSplFrame.copyTo(mog2Frame, fgMask);
+        
+        double threshold = (double)parseOption("threshold", DEF_THRESHOLD);
+        cv::threshold( mog2Frame, mog2Frame, threshold, 255, 0);
+        
         std::cout << "MOG2 finished! \n";
         mog2Status = true;
     } else { mog2Status = false; }
