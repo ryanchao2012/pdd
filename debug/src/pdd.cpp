@@ -130,33 +130,35 @@ void Pdd::update() {
 void Pdd::applyFilter() {
     if(mog2Status) {
         cv::GaussianBlur(mog2Frame, tempFrame, Size(5, 5), 0, 0, cv::BORDER_DEFAULT);
+        applyDilate();
     }
 //    applyDilate();
 //    applyCLAHE();
 //    applyCanny();
 }
 
-//void Pdd::applyDilate() {
-//    if(mog2Status) {
-//        std::cout << "Applying dilate to fill holes, please wait \n";
-//        int sizeDilate = parseOption("sizeDilate", DEF_DILATE_SIZE);
-//        dilateFrame = cv::Mat::zeros(frameSize, frameType);
-//        cv::dilate(mog2Frame, dilateFrame, cv::Mat(sizeDilate, sizeDilate, frameType));
-//        
-//        std::cout << "Dilate finished!\n";
-//        dilateStatus = true;
-//    }
-//}
+void Pdd::applyDilate() {
+    if(mog2Status) {
+        std::cout << "Applying dilate to fill holes, please wait \n";
+        int sizeDilate = parseOption("sizeDilate", DEF_DILATE_SIZE);
+        dilateFrame = cv::Mat::zeros(frameSize, frameType);
+        cv::dilate(tempFrame, tempFrame, cv::Mat(sizeDilate, sizeDilate, frameType));
+        
+        std::cout << "Dilate finished!\n";
+        dilateStatus = true;
+    }
+}
 
 void Pdd::applyCLAHE() {
-    if (mog2Status) {
+    if (fgStatus) {
         std::cout << "Applying CLAHE to enhance contrast, please wait \n";
         claheFrame = cv::Mat::zeros(frameSize, frameType);
         int claheGridSize = (1 << parseOption("pow2CLAHE", DEF_CLAHE_POW2));
         Ptr<cv::CLAHE> clahe = cv::createCLAHE(1.0, Size(claheGridSize, claheGridSize));
-        if(!tempFrame.empty()) { clahe->apply(tempFrame, tempFrame); }
-        else { clahe->apply(mog2Frame, tempFrame); }
-        
+//        if(!tempFrame.empty()) { clahe->apply(tempFrame, tempFrame); }
+//        else { clahe->apply(fgSplFrame, fgSplFrame); }
+        clahe->apply(fgSplFrame, fgSplFrame);
+        if (bgStatus) { clahe->apply(bgRefFrame, bgRefFrame); }
         
         std::cout << "CLAHE finished!\n";
         claheStatus = true;
