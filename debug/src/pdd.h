@@ -76,10 +76,13 @@ public:
     void showRaw(){ showFrame(rawFrame); };
     void showFg(){ showFrame(fgSplFrame); };
     void showMOG2() { showFrame(mog2Frame); };
-    void showDilate() { showFrame(dilateFrame); }
-    void showCLAHE() { showFrame(claheFrame); };
+    void showDilate() { showFrame(tempFrame); }
+    void showTemp() { showFrame(tempFrame); };
     void showCanny() { showFrame(cannyFrame); };
     void showContour() {showFrame(contourFrame); };
+    void applyCLAHE();
+    void applyCanny();
+    void clear();
 
 private:
     unsigned int parseOption(const std::string & name, unsigned int def_value);
@@ -87,8 +90,7 @@ private:
     bool grabRawFrame();
     cv::Mat grabAveFrame();
     void showFrame(cv::Mat frame){ if(!frame.empty()) cv::imwrite("preview.png", frame); };
-    void applyCLAHE();
-    void applyCanny();
+    
     void applyDilate();
 
 #if PDD_OSX_DEBUG
@@ -105,6 +107,7 @@ private:
     cv::Mat claheFrame;
     cv::Mat cannyFrame;
     cv::Mat contourFrame;
+    cv::Mat tempFrame;
     std::map<std::string, std::string> options;
     
     int frameType = CV_8UC3;

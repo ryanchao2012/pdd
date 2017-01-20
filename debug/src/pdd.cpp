@@ -98,6 +98,11 @@ void Pdd::reloadConfig(const char * cfgFile) {
 }
 
 
+void Pdd::clear() {
+    tempFrame.release();
+    
+}
+
 void Pdd::resetOptions() {
     options.clear();
     options["numAveFrmSpl"] = std::to_string(DEF_AVE_FRM_SPL_NUM);
@@ -123,30 +128,35 @@ void Pdd::update() {
 }
 
 void Pdd::applyFilter() {
-    applyDilate();
-    applyCLAHE();
-    applyCanny();
+    if(mog2Status) {
+        cv::GaussianBlur(mog2Frame, tempFrame, Size(5, 5), 0, 0, cv::BORDER_DEFAULT);
+    }
+//    applyDilate();
+//    applyCLAHE();
+//    applyCanny();
 }
 
-void Pdd::applyDilate() {
-    if(mog2Status) {
-        std::cout << "Applying dilate to fill holes, please wait \n";
-        int sizeDilate = parseOption("sizeDilate", DEF_DILATE_SIZE);
-        dilateFrame = cv::Mat::zeros(frameSize, frameType);
-        cv::dilate(mog2Frame, dilateFrame, cv::Mat(sizeDilate, sizeDilate, frameType));
-        
-        std::cout << "Dilate finished!\n";
-        dilateStatus = true;
-    }
-}
+//void Pdd::applyDilate() {
+//    if(mog2Status) {
+//        std::cout << "Applying dilate to fill holes, please wait \n";
+//        int sizeDilate = parseOption("sizeDilate", DEF_DILATE_SIZE);
+//        dilateFrame = cv::Mat::zeros(frameSize, frameType);
+//        cv::dilate(mog2Frame, dilateFrame, cv::Mat(sizeDilate, sizeDilate, frameType));
+//        
+//        std::cout << "Dilate finished!\n";
+//        dilateStatus = true;
+//    }
+//}
 
 void Pdd::applyCLAHE() {
-    if (dilateStatus) {
+    if (mog2Status) {
         std::cout << "Applying CLAHE to enhance contrast, please wait \n";
         claheFrame = cv::Mat::zeros(frameSize, frameType);
         int claheGridSize = (1 << parseOption("pow2CLAHE", DEF_CLAHE_POW2));
         Ptr<cv::CLAHE> clahe = cv::createCLAHE(1.0, Size(claheGridSize, claheGridSize));
-        clahe->apply(dilateFrame, claheFrame);
+        if(!tempFrame.empty()) { clahe->apply(tempFrame, tempFrame); }
+        else { clahe->apply(mog2Frame, tempFrame); }
+        
         
         std::cout << "CLAHE finished!\n";
         claheStatus = true;
@@ -155,17 +165,19 @@ void Pdd::applyCLAHE() {
 }
 
 void Pdd::applyCanny() {
-    if (dilateStatus) {
+    if (mog2Status) {
         std::cout << "Applying Canny to find contour, please wait \n";
         cannyFrame = cv::Mat::zeros(frameSize, frameType);
         double lowThresholdCanny = (double)parseOption("lowThresholdCanny", DEF_CANNY_LOW_TH);
         double ratioThresholdCanny = (double)parseOption("ratioThresholdCanny", DEF_CANNY_TH_RATIO);
         int sizeKerenlCanny = parseOption("sizeKerenlCanny", DEF_CANNY_KNL_SIZE);
-        Canny(claheFrame, cannyFrame, lowThresholdCanny, ratioThresholdCanny * lowThresholdCanny, sizeKerenlCanny);
+        if(!tempFrame.empty()) { Canny(tempFrame, tempFrame, lowThresholdCanny, ratioThresholdCanny * lowThresholdCanny, sizeKerenlCanny); }
+        else { Canny(mog2Frame, tempFrame, lowThresholdCanny, ratioThresholdCanny * lowThresholdCanny, sizeKerenlCanny); }
+        
         
         vector<vector<Point> > contours;
         vector<Vec4i> hierarchy;
-        findContours(cannyFrame, contours, hierarchy, CV_RETR_TREE, CV_CHAIN_APPROX_SIMPLE, Point(0, 0));
+        findContours(tempFrame, contours, hierarchy, CV_RETR_TREE, CV_CHAIN_APPROX_SIMPLE, Point(0, 0));
         
         contourFrame = cv::Mat::zeros(frameSize, CV_8UC3);
         Scalar edgeColor = cv::Scalar(0, 255, 0);
@@ -175,8 +187,8 @@ void Pdd::applyCanny() {
                 std::cout << ".";
             }
         }
-        double threshold = (double)parseOption("threshold", DEF_THRESHOLD);
-        cv::threshold( contourFrame, contourFrame, threshold, 255, 0);
+//        double threshold = (double)parseOption("threshold", DEF_THRESHOLD);
+//        cv::threshold( contourFrame, contourFrame, threshold, 255, 0);
         std::cout << "Canny finished!\n";
     }
 }
@@ -205,8 +217,8 @@ void Pdd::applyMOG2() {
         pMOG2->apply(fgSplFrame, fgMask, 0);
         fgSplFrame.copyTo(mog2Frame, fgMask);
         
-        double threshold = (double)parseOption("threshold", DEF_THRESHOLD);
-        cv::threshold( mog2Frame, mog2Frame, threshold, 255, 0);
+//        double threshold = (double)parseOption("threshold", DEF_THRESHOLD);
+//        cv::threshold( mog2Frame, mog2Frame, threshold, 255, 0);
         
         std::cout << "MOG2 finished! \n";
         mog2Status = true;

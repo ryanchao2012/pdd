@@ -51,6 +51,12 @@ void keyAction(char key) {
         case 'l':
             pipeline.applyFilter();
             break;
+        case 'N':
+            pipeline.applyCanny();
+            break;
+        case 'H':
+            pipeline.applyCLAHE();
+            break;
         case 'f':
             pipeline.setupFgSpl();
             break;
@@ -76,7 +82,7 @@ void keyAction(char key) {
             pipeline.showDilate();
             break;
         case '6':
-            pipeline.showCLAHE();
+            pipeline.showTemp();
             break;
         case '7':
             pipeline.showCanny();
